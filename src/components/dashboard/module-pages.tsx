@@ -7,6 +7,7 @@ import Link from "next/link";
 import { type FormEvent, useState } from "react";
 import { toast } from "sonner";
 import {
+  type DataColumn,
   DataTable,
   PageHeading,
   StatusLabel,
@@ -29,7 +30,7 @@ import {
   justiceService,
   type Payment,
 } from "@/services/justice.service";
-import type { Lawyer } from "@/types/lawyer.type";
+import type { Lawyer, Specialization } from "@/types/lawyer.type";
 import type { Schedule } from "@/types/schedule.type";
 
 const controlClass =
@@ -855,11 +856,26 @@ export function SpecializationsPage() {
   const createMutation = useApiMutation(justiceService.createSpecialization, [
     "specializations",
   ]);
+  const updateMutation = useApiMutation(
+    ({
+      id,
+      body,
+    }: {
+      id: string;
+      body: { name: string; description: string };
+    }) => justiceService.updateSpecialization(id, body),
+    ["specializations"],
+  );
   const reviewMutation = useApiMutation(justiceService.reviewSpecialization, [
     "specialization-requests",
   ]);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [editingSpecialization, setEditingSpecialization] =
+    useState<Specialization | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [updateError, setUpdateError] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   async function create(event: FormEvent<HTMLFormElement>) {
@@ -879,6 +895,22 @@ export function SpecializationsPage() {
       setError(getApiErrorMessage(caught));
     } finally {
       setBusy(false);
+    }
+  }
+  async function updateSpecialization(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!editingSpecialization) return;
+    setUpdateError("");
+    try {
+      await updateMutation.mutateAsync({
+        id: editingSpecialization.id,
+        body: { name: editName.trim(), description: editDescription.trim() },
+      });
+      toast.success("Specialization updated");
+      setEditingSpecialization(null);
+      invalidate();
+    } catch (caught) {
+      setUpdateError(getApiErrorMessage(caught));
     }
   }
   const requestRows = (requests.data?.data ?? [])
@@ -951,21 +983,36 @@ export function SpecializationsPage() {
       toast.error(getApiErrorMessage(caught));
     }
   }
-  const specializationColumns = [
+  const specializationColumns: DataColumn<Specialization>[] = [
     {
       key: "name",
       label: "Practice area",
-      render: (item: { id: string; name: string }) => (
-        <span className="font-medium">{item.name}</span>
-      ),
+      render: (item) => <span className="font-medium">{item.name}</span>,
     },
     {
       key: "description",
       label: "Description",
-      render: (item: { id: string; description?: string | null }) =>
-        item.description ?? "—",
+      render: (item) => item.description ?? "—",
     },
   ];
+  if (role === "ADMIN" || role === "SUPER_ADMIN") {
+    specializationColumns.push({
+      key: "actions",
+      label: "Actions",
+      render: (item) => (
+        <SmallAction
+          onClick={() => {
+            setEditingSpecialization(item);
+            setEditName(item.name);
+            setEditDescription(item.description ?? "");
+            setUpdateError("");
+          }}
+        >
+          Update
+        </SmallAction>
+      ),
+    });
+  }
   return (
     <div>
       <PageHeading
@@ -1002,12 +1049,72 @@ export function SpecializationsPage() {
             />
           </div>
           <div className="flex items-end">
-            <Button disabled={busy} className="h-10 bg-[#174638] text-white">
+            <Button
+              type="submit"
+              disabled={busy}
+              className="h-10 bg-[#174638] text-white"
+            >
               Add
             </Button>
           </div>
           {error && (
             <p className="text-xs text-[#985547] sm:col-span-3">{error}</p>
+          )}
+        </form>
+      )}
+      {editingSpecialization && (
+        <form
+          onSubmit={updateSpecialization}
+          className="mb-5 grid gap-3 border border-[#dfe6e2] bg-white p-4 sm:grid-cols-[1fr_2fr_auto]"
+        >
+          <div>
+            <label className={fieldLabel} htmlFor="edit-specialization-name">
+              Practice area
+            </label>
+            <input
+              required
+              id="edit-specialization-name"
+              value={editName}
+              onChange={(event) => setEditName(event.target.value)}
+              className={controlClass}
+            />
+          </div>
+          <div>
+            <label
+              className={fieldLabel}
+              htmlFor="edit-specialization-description"
+            >
+              Description
+            </label>
+            <input
+              id="edit-specialization-description"
+              value={editDescription}
+              onChange={(event) => setEditDescription(event.target.value)}
+              className={controlClass}
+            />
+          </div>
+          <div className="flex items-end gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setEditingSpecialization(null)}
+              disabled={updateMutation.isPending}
+              className="h-10"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={updateMutation.isPending}
+              className="h-10 bg-[#174638] text-white"
+            >
+              {updateMutation.isPending ? "Saving..." : "Save"}
+            </Button>
+          </div>
+          {updateError && (
+            <p role="alert" className="text-xs text-[#985547] sm:col-span-3">
+              {updateError}
+            </p>
           )}
         </form>
       )}

@@ -125,6 +125,10 @@ export const justiceService = {
   }) => patch<unknown>("/specialization/requests/review", body),
   createSpecialization: (body: { name: string; description?: string }) =>
     post<Specialization>("/specialization/", body),
+  updateSpecialization: (
+    id: string,
+    body: { name: string; description: string },
+  ) => patch<Specialization>(`/specialization/${id}`, body),
 
   appointments: (
     role: UserRole,
