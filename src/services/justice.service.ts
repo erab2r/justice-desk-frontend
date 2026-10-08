@@ -158,7 +158,9 @@ export const justiceService = {
     params?: Record<string, string | number | undefined>,
   ) =>
     get<Payment[]>(
-      role === "CLIENT" ? "/payment/my-payments" : "/payment/all-payments",
+      role === "ADMIN" || role === "SUPER_ADMIN"
+        ? "/payment/all-payments"
+        : "/payment/my-payments",
       params,
     ),
   payment: (id: string) => get<Payment>(`/payment/${id}`),

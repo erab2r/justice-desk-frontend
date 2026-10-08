@@ -14,7 +14,7 @@ import { getApiErrorMessage } from "@/lib/apiClient";
 import { justiceService } from "@/services/justice.service";
 
 const inputClass =
-  "h-10 w-full rounded-md border border-[#d9e2dc] bg-white px-3 text-sm text-[#26382d] outline-none focus:border-[#56826c] focus:ring-2 focus:ring-[#56826c]/15";
+  "h-10 w-full rounded-lg border border-[#d9e2dc] bg-white px-3 text-sm text-[#26382d] shadow-sm outline-none transition focus:border-[#56826c] focus:ring-2 focus:ring-[#56826c]/15 disabled:bg-[#f5f7f5]";
 const labelClass = "mb-1.5 block text-[11px] font-semibold text-[#506057]";
 
 function ErrorMessage({ error }: { error: unknown }) {
@@ -57,7 +57,7 @@ export function AppointmentDetailPage() {
     <div>
       <Link
         href="../appointments"
-        className="mb-5 inline-flex items-center gap-1.5 text-xs text-[#6e7d73] hover:text-[#315744]"
+        className="mb-5 inline-flex items-center gap-1.5 rounded-md text-xs text-[#6e7d73] transition-colors hover:text-[#315744] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#56826c]/40"
       >
         <ArrowLeft size={14} /> Appointments
       </Link>
@@ -72,7 +72,7 @@ export function AppointmentDetailPage() {
         action={<StatusLabel>{item.status}</StatusLabel>}
       />
       <div className="grid gap-4 md:grid-cols-2">
-        <div className="space-y-3 border border-[#dfe6e2] bg-white p-5">
+        <div className="space-y-4 rounded-xl border border-[#dfe6e2] bg-white p-4 shadow-[0_8px_28px_-24px_rgba(23,61,48,0.28)] sm:p-5">
           <Fact label="Appointment ID" value={item.id} />
           <Fact
             label="Serial number"
@@ -97,7 +97,7 @@ export function AppointmentDetailPage() {
             }
           />
         </div>
-        <div className="space-y-3 border border-[#dfe6e2] bg-white p-5">
+        <div className="space-y-4 rounded-xl border border-[#dfe6e2] bg-white p-4 shadow-[0_8px_28px_-24px_rgba(23,61,48,0.28)] sm:p-5">
           <Fact label="Client" value={item.client?.name ?? "—"} />
           <Fact label="Lawyer" value={item.lawyer?.name ?? "—"} />
           <Fact
@@ -176,7 +176,7 @@ export function LawyerProfilePage() {
       ) : (
         <form
           onSubmit={save}
-          className="grid max-w-3xl gap-4 border border-[#dfe6e2] bg-white p-5 sm:grid-cols-2"
+          className="grid max-w-3xl gap-4 rounded-xl border border-[#dfe6e2] bg-white p-4 shadow-[0_8px_28px_-24px_rgba(23,61,48,0.28)] sm:grid-cols-2 sm:p-6"
         >
           <div>
             <label className={labelClass} htmlFor="profile-name">

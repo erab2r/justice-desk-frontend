@@ -28,7 +28,9 @@ import {
   type Appointment,
   type Invoice,
   justiceService,
+  type PaginationMeta,
   type Payment,
+  type UserRole,
 } from "@/services/justice.service";
 import type { Lawyer, Specialization } from "@/types/lawyer.type";
 import type { Schedule } from "@/types/schedule.type";
@@ -127,13 +129,13 @@ export function LawyerDirectoryPage() {
           {[0, 1, 2].map((key) => (
             <div
               key={key}
-              className="h-44 animate-pulse border border-[#e0e7e2] bg-white"
+              className="h-44 animate-pulse rounded-xl border border-[#e0e7e2] bg-white"
             />
           ))}
         </div>
       ) : null}
       {!lawyers.isPending && rows.length === 0 ? (
-        <div className="border border-dashed border-[#d5dfd8] bg-white px-5 py-14 text-center text-sm text-[#78857d]">
+        <div className="rounded-xl border border-dashed border-[#d5dfd8] bg-white px-5 py-14 text-center text-sm text-[#78857d]">
           No public lawyers match this search.
         </div>
       ) : null}
@@ -141,7 +143,7 @@ export function LawyerDirectoryPage() {
         {rows.map((lawyer) => (
           <article
             key={lawyer.id}
-            className="border border-[#dfe6e2] bg-white p-4"
+            className="rounded-xl border border-[#dfe6e2] bg-white p-4 shadow-[0_8px_28px_-24px_rgba(23,61,48,0.28)] transition-shadow hover:shadow-[0_12px_32px_-24px_rgba(23,61,48,0.38)]"
           >
             <div className="flex gap-3">
               <span className="grid size-10 shrink-0 place-items-center rounded-full bg-[#e8f0ea] text-sm font-semibold text-[#315b43]">
@@ -225,7 +227,7 @@ export function LawyerDirectoryPage() {
                     .map((schedule) => (
                       <div
                         key={schedule.id}
-                        className="flex items-center justify-between gap-3 rounded border border-[#e5ebe7] px-2.5 py-2"
+                        className="flex items-center justify-between gap-3 rounded-lg border border-[#e5ebe7] bg-[#fbfcfb] px-3 py-2.5"
                       >
                         <div>
                           <p className="text-xs font-medium text-[#38483e]">
@@ -257,13 +259,14 @@ export function LawyerDirectoryPage() {
   );
 }
 
-export function AppointmentsPage() {
-  const role = useSessionRole();
+export function AppointmentsPage({ accountRole }: { accountRole: UserRole }) {
+  const role = accountRole;
   const appointmentRouteRole =
     role === "SUPER_ADMIN" || role === "ADMIN" ? "admin" : role.toLowerCase();
+  const [page, setPage] = useState(1);
   const queries = useQuery({
-    queryKey: ["appointments", role],
-    queryFn: () => justiceService.appointments(role, { page: 1, limit: 50 }),
+    queryKey: ["appointments", role, page],
+    queryFn: () => justiceService.appointments(role, { page, limit: 10 }),
   });
   const invalidate = useRefreshQueries([
     "appointments",
@@ -449,6 +452,15 @@ export function AppointmentsPage() {
                 Cancel
               </SmallAction>
             )}
+          {(role === "ADMIN" || role === "SUPER_ADMIN") &&
+            !["CANCELLED", "COMPLETED"].includes(item.status) && (
+              <SmallAction
+                onClick={() => perform("cancel", item)}
+                disabled={mutation.isPending}
+              >
+                Cancel
+              </SmallAction>
+            )}
           {role === "LAWYER" && item.status === "CONFIRMED" && (
             <SmallAction
               onClick={() => perform("ongoing", item)}
@@ -480,7 +492,11 @@ export function AppointmentsPage() {
       <PageHeading
         eyebrow="Scheduling"
         title="Appointments"
-        description="Bookings, serial numbers, payment states, and appointment actions from the service."
+        description={
+          role === "ADMIN" || role === "SUPER_ADMIN"
+            ? "All client and lawyer appointments, including booking and payment status."
+            : "Bookings, serial numbers, payment states, and appointment actions from the service."
+        }
       />
       <PaymentReturnNotice />
       <DataTable
@@ -491,12 +507,12 @@ export function AppointmentsPage() {
         emptyTitle="No appointments found"
         emptyDescription="Appointment records will appear here after a booking is started."
       />
-      {queries.data?.meta && (
-        <p className="mt-3 text-right text-[10px] text-[#89948d]">
-          Page {queries.data.meta.page} · {queries.data.meta.total} total
-          records
-        </p>
-      )}
+      <HistoryPagination
+        page={page}
+        meta={queries.data?.meta}
+        isLoading={queries.isFetching}
+        onPageChange={setPage}
+      />
     </div>
   );
 }
@@ -536,11 +552,61 @@ function isInSchedule(schedule?: Schedule) {
   );
 }
 
-export function PaymentsPage() {
-  const role = useSessionRole();
+function HistoryPagination({
+  page,
+  meta,
+  isLoading,
+  onPageChange,
+}: {
+  page: number;
+  meta?: PaginationMeta;
+  isLoading: boolean;
+  onPageChange: (page: number) => void;
+}) {
+  if (!meta) return null;
+
+  const firstRecord = meta.total === 0 ? 0 : (page - 1) * meta.limit + 1;
+  const lastRecord = Math.min(page * meta.limit, meta.total);
+
+  return (
+    <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-[11px] text-[#748178]">
+      <p>
+        Showing {firstRecord}–{lastRecord} of {meta.total} records
+      </p>
+      {meta.totalPages > 1 && (
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            disabled={isLoading || page <= 1}
+            onClick={() => onPageChange(page - 1)}
+          >
+            Previous
+          </Button>
+          <span>
+            Page {page} of {meta.totalPages}
+          </span>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            disabled={isLoading || page >= meta.totalPages}
+            onClick={() => onPageChange(page + 1)}
+          >
+            Next
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function PaymentsPage({ accountRole }: { accountRole: UserRole }) {
+  const [page, setPage] = useState(1);
   const payments = useQuery({
-    queryKey: ["payments", role],
-    queryFn: () => justiceService.payments(role, { page: 1, limit: 50 }),
+    queryKey: ["payments", accountRole, page],
+    queryFn: () => justiceService.payments(accountRole, { page, limit: 10 }),
   });
   const rows = payments.data?.data ?? [];
   const columns = [
@@ -570,12 +636,25 @@ export function PaymentsPage() {
       label: "Appointment",
       render: (item: Payment) =>
         item.appointment?.id ? (
-          <Link
-            href={`/${role.toLowerCase()}/appointments/${item.appointment.id}`}
-            className="text-[#39715d] hover:underline"
-          >
-            {item.appointment.id.slice(0, 8)}
-          </Link>
+          <div>
+            <Link
+              href={`/${accountRole.toLowerCase()}/appointments/${item.appointment.id}`}
+              className="text-[#39715d] hover:underline"
+            >
+              {item.appointment.id.slice(0, 8)}
+            </Link>
+            <span className="mt-1 block text-[10px] text-[#839087]">
+              {item.appointment.client?.name ?? "Client not listed"} ·{" "}
+              {item.appointment.lawyer?.name ?? "Lawyer not listed"}
+            </span>
+            {item.appointment.schedule?.startDateTime && (
+              <span className="mt-1 block text-[10px] text-[#839087]">
+                {new Date(
+                  item.appointment.schedule.startDateTime,
+                ).toLocaleDateString()}
+              </span>
+            )}
+          </div>
         ) : (
           "—"
         ),
@@ -591,7 +670,11 @@ export function PaymentsPage() {
       <PageHeading
         eyebrow="Billing"
         title="Payments"
-        description="Payment records and gateway status returned for your account."
+        description={
+          accountRole === "ADMIN" || accountRole === "SUPER_ADMIN"
+            ? "Payment history across all accounts, with gateway and payment status."
+            : "Your payment history and gateway status."
+        }
       />
       <DataTable
         columns={columns}
@@ -602,6 +685,12 @@ export function PaymentsPage() {
         }
         emptyTitle="No payment records"
         emptyDescription="A payment record appears after an appointment payment is initiated."
+      />
+      <HistoryPagination
+        page={page}
+        meta={payments.data?.meta}
+        isLoading={payments.isFetching}
+        onPageChange={setPage}
       />
       <p className="mt-3 text-[10px] text-[#87938c]">
         Payments are initiated and confirmed by the configured Stripe or bKash
@@ -798,7 +887,7 @@ export function LawyerReviewPage() {
             const lawyer = rows.find((item) => item.id === rejectionId);
             if (lawyer) void review(lawyer, "REJECTED");
           }}
-          className="mb-4 flex flex-col gap-2 border border-[#ead8d3] bg-[#fffaf8] p-4 sm:flex-row sm:items-end"
+          className="mb-4 flex flex-col gap-2 rounded-xl border border-[#ead8d3] bg-[#fffaf8] p-4 sm:flex-row sm:items-end"
         >
           <div className="flex-1">
             <label className={fieldLabel} htmlFor="reject-reason">
@@ -1023,7 +1112,7 @@ export function SpecializationsPage() {
       {(role === "ADMIN" || role === "SUPER_ADMIN") && (
         <form
           onSubmit={create}
-          className="mb-5 grid gap-3 border border-[#dfe6e2] bg-white p-4 sm:grid-cols-[1fr_2fr_auto]"
+          className="mb-5 grid gap-3 rounded-xl border border-[#dfe6e2] bg-white p-4 shadow-sm sm:grid-cols-[1fr_2fr_auto]"
         >
           <div>
             <label className={fieldLabel} htmlFor="specialization-name">
@@ -1065,7 +1154,7 @@ export function SpecializationsPage() {
       {editingSpecialization && (
         <form
           onSubmit={updateSpecialization}
-          className="mb-5 grid gap-3 border border-[#dfe6e2] bg-white p-4 sm:grid-cols-[1fr_2fr_auto]"
+          className="mb-5 grid gap-3 rounded-xl border border-[#dfe6e2] bg-white p-4 shadow-sm sm:grid-cols-[1fr_2fr_auto]"
         >
           <div>
             <label className={fieldLabel} htmlFor="edit-specialization-name">

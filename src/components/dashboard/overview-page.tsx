@@ -192,8 +192,8 @@ export default function OverviewPage({ userRole }: { userRole: UserRole }) {
         )}
       </div>
 
-      <div className="mt-6 grid gap-5 xl:grid-cols-[minmax(0,1.2fr)_minmax(300px,.8fr)]">
-        <section className="border border-[#dfe6e2] bg-white p-4 sm:p-5">
+      <div className="mt-6 grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(300px,.8fr)] sm:gap-5">
+        <section className="rounded-xl border border-[#dfe6e2] bg-white p-4 shadow-[0_8px_28px_-24px_rgba(23,61,48,0.28)] sm:p-5">
           <div className="mb-4 flex items-end justify-between gap-3">
             <div>
               <h2 className="text-sm font-semibold text-[#24382c]">
@@ -218,13 +218,13 @@ export default function OverviewPage({ userRole }: { userRole: UserRole }) {
               {getApiErrorMessage(appointments.error)}
             </p>
           ) : appointments.isPending ? (
-            <div className="h-55 animate-pulse bg-[#f1f5f2]" />
+            <div className="h-56 animate-pulse rounded-lg bg-[#f1f5f2]" />
           ) : appointmentRows.length === 0 ? (
-            <p className="grid h-55 place-items-center text-sm text-[#87938c]">
+            <p className="grid h-56 place-items-center text-sm text-[#87938c]">
               No appointment records returned.
             </p>
           ) : (
-            <div className="h-55 w-full">
+            <div className="h-56 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                   data={chartData}
@@ -263,14 +263,14 @@ export default function OverviewPage({ userRole }: { userRole: UserRole }) {
           )}
         </section>
 
-        <section className="border border-[#dfe6e2] bg-white p-4 sm:p-5">
+        <section className="rounded-xl border border-[#dfe6e2] bg-white p-4 shadow-[0_8px_28px_-24px_rgba(23,61,48,0.28)] sm:p-5">
           <h2 className="text-sm font-semibold text-[#24382c]">Quick access</h2>
           <div className="mt-3 divide-y divide-[#edf1ee]">
             {overviewLinks[userRole].map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className="flex items-center justify-between py-3 text-[13px] text-[#4c5c52] hover:text-[#174638]"
+                className="flex items-center justify-between rounded-lg px-2 py-3 text-[13px] text-[#4c5c52] transition-colors hover:bg-[#f6f9f6] hover:text-[#174638]"
               >
                 <span>{item.label}</span>
                 <ArrowRight size={14} />
@@ -330,7 +330,7 @@ function Metric({
   detail: string;
 }) {
   return (
-    <div className="border border-[#dfe6e2] bg-white px-4 py-4">
+    <div className="rounded-xl border border-[#dfe6e2] bg-white px-4 py-4 shadow-[0_8px_28px_-24px_rgba(23,61,48,0.28)] transition-shadow hover:shadow-[0_12px_32px_-24px_rgba(23,61,48,0.38)]">
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium text-[#728078]">{label}</span>
         <span className="text-[#668270]">{icon}</span>

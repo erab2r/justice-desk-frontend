@@ -124,9 +124,9 @@ export default function LawyerApplyForm() {
   });
 
   return (
-    <div className="flex flex-col gap-6 ">
-      <div className="flex flex-col gap-2 text-center">
-        <h1 className="text-2xl font-bold tracking-tight">
+    <div className="flex flex-col gap-5 sm:gap-6">
+      <div className="flex flex-col gap-2 border-b border-[#e6ece8] pb-4 text-left">
+        <h1 className="text-xl font-semibold tracking-tight text-[#20372b] sm:text-2xl">
           Apply to join Justice Desk
         </h1>
       </div>
@@ -139,8 +139,8 @@ export default function LawyerApplyForm() {
         }}
         noValidate
       >
-        <FieldGroup>
-          <div className="grid gap-5 sm:grid-cols-2">
+        <FieldGroup className="gap-5">
+          <div className="grid gap-4 sm:grid-cols-2 sm:gap-5">
             <form.Field name="name">
               {(field) => {
                 const isInvalid =
@@ -159,7 +159,7 @@ export default function LawyerApplyForm() {
                         onBlur={field.handleBlur}
                         onChange={(e) => field.handleChange(e.target.value)}
                         aria-invalid={isInvalid}
-                        className="pl-9"
+                        className="h-10 pl-9"
                         autoComplete="name"
                       />
                     </div>
@@ -189,7 +189,7 @@ export default function LawyerApplyForm() {
                         onBlur={field.handleBlur}
                         onChange={(e) => field.handleChange(e.target.value)}
                         aria-invalid={isInvalid}
-                        className="pl-9"
+                        className="h-10 pl-9"
                         autoComplete="email"
                       />
                     </div>
@@ -219,7 +219,7 @@ export default function LawyerApplyForm() {
                         onBlur={field.handleBlur}
                         onChange={(e) => field.handleChange(e.target.value)}
                         aria-invalid={isInvalid}
-                        className="pl-9"
+                        className="h-10 pl-9"
                         autoComplete="tel"
                       />
                     </div>
@@ -254,7 +254,7 @@ export default function LawyerApplyForm() {
                         onBlur={field.handleBlur}
                         onChange={(e) => field.handleChange(e.target.value)}
                         aria-invalid={isInvalid}
-                        className="pl-9"
+                        className="h-10 pl-9"
                         autoComplete="street-address"
                       />
                     </div>
@@ -267,7 +267,7 @@ export default function LawyerApplyForm() {
             </form.Field>
           </div>
 
-          <div className="grid gap-5 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2 sm:gap-5">
             <form.Field name="specializationIds">
               {(field) => {
                 const isInvalid =
@@ -292,7 +292,7 @@ export default function LawyerApplyForm() {
                       }
                       aria-invalid={isInvalid}
                       disabled={specializations.isPending || specializations.isError}
-                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      className="min-h-28 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm transition-colors focus-visible:border-ring focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
                     >
                       {(specializations.data?.data ?? []).map((specialization) => (
                         <option key={specialization.id} value={specialization.id}>
@@ -338,7 +338,7 @@ export default function LawyerApplyForm() {
                         onBlur={field.handleBlur}
                         onChange={(e) => field.handleChange(e.target.value)}
                         aria-invalid={isInvalid}
-                        className="pl-9"
+                        className="h-10 pl-9"
                       />
                     </div>
                     {isInvalid && (
@@ -367,7 +367,7 @@ export default function LawyerApplyForm() {
                         onBlur={field.handleBlur}
                         onChange={(e) => field.handleChange(e.target.value)}
                         aria-invalid={isInvalid}
-                        className="pl-9"
+                        className="h-10 pl-9"
                       />
                     </div>
                     {isInvalid && (
@@ -401,7 +401,7 @@ export default function LawyerApplyForm() {
                         onBlur={field.handleBlur}
                         onChange={(e) => field.handleChange(e.target.value)}
                         aria-invalid={isInvalid}
-                        className="pl-9"
+                        className="h-10 pl-9"
                       />
                     </div>
                     {isInvalid && (
@@ -413,7 +413,7 @@ export default function LawyerApplyForm() {
             </form.Field>
           </div>
 
-          <div className="grid gap-5 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2 sm:gap-5">
             <form.Field name="consultationFee">
               {(field) => {
                 const isInvalid =
@@ -440,7 +440,7 @@ export default function LawyerApplyForm() {
                         onBlur={field.handleBlur}
                         onChange={(e) => field.handleChange(e.target.value)}
                         aria-invalid={isInvalid}
-                        className="pl-9"
+                        className="h-10 pl-9"
                       />
                     </div>
                     {isInvalid && (
@@ -473,6 +473,7 @@ export default function LawyerApplyForm() {
                     onBlur={field.handleBlur}
                     onChange={(e) => field.handleChange(e.target.value)}
                     aria-invalid={isInvalid}
+                    className="min-h-28 rounded-lg"
                   />
                   <div className="flex items-center justify-between gap-2">
                     <FieldDescription>
@@ -496,7 +497,7 @@ export default function LawyerApplyForm() {
               return (
                 <Field data-invalid={isInvalid}>
                   <FieldLabel htmlFor="resume-field">Resume</FieldLabel>
-                  <div className="flex flex-wrap items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-3 rounded-xl border border-dashed border-[#d9e4dc] bg-[#f8faf8] p-3 sm:p-4">
                     <Button
                       render={<label htmlFor="resume-field" />}
                       nativeButton={false}
@@ -561,7 +562,7 @@ export default function LawyerApplyForm() {
                       (optional)
                     </span>
                   </FieldLabel>
-                  <div className="flex flex-wrap items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-3 rounded-xl border border-dashed border-[#d9e4dc] bg-[#f8faf8] p-3 sm:p-4">
                     <Button
                       render={<label htmlFor="additional-file-field" />}
                       nativeButton={false}
@@ -630,8 +631,12 @@ export default function LawyerApplyForm() {
             }}
           </form.Field>
         </FieldGroup>
-        <div className="flex justify-end w-full mt-5">
-          <Button disabled={applyPending} type="submit">
+        <div className="mt-5 flex w-full justify-stretch sm:justify-end">
+          <Button
+            disabled={applyPending}
+            type="submit"
+            className="h-10 w-full sm:w-auto sm:min-w-36"
+          >
             {applyPending ? (
               <>
                 <Spinner /> submitting

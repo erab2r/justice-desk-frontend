@@ -81,12 +81,12 @@ export default function LoginForm() {
   });
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-5 sm:gap-6">
       <div className="flex flex-col items-center gap-2 text-center">
-        <h1 className="text-2xl font-bold tracking-tight">
+        <h1 className="text-xl font-semibold tracking-tight text-[#20372b] sm:text-2xl">
           Login to your account
         </h1>
-        <p className="text-balance text-sm text-muted-foreground">
+        <p className="max-w-sm text-balance text-sm leading-6 text-muted-foreground">
           Enter your email below to login to your account
         </p>
       </div>
@@ -97,7 +97,7 @@ export default function LoginForm() {
           form.handleSubmit();
         }}
       >
-        <FieldGroup>
+        <FieldGroup className="gap-5">
           <form.Field name="email">
             {(field) => {
               const isInvalid =
@@ -112,6 +112,7 @@ export default function LoginForm() {
                     onChange={(e) => field.handleChange(e.target.value)}
                     onBlur={field.handleBlur}
                     value={field.state.value}
+                    className="h-10"
                     autoComplete="off"
                     aria-invalid={isInvalid}
                   />
@@ -137,11 +138,13 @@ export default function LoginForm() {
                       onChange={(e) => field.handleChange(e.target.value)}
                       onBlur={field.handleBlur}
                       value={field.state.value}
+                      className="h-10 pr-10"
                       autoComplete="off"
                       aria-invalid={isInvalid}
                     />
                     <button
-                      className="absolute right-3 top-1/2 -translate-y-1/2"
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                       type="button"
                       onClick={() => setShowPassword((prev) => !prev)}
                     >
@@ -158,7 +161,7 @@ export default function LoginForm() {
             }}
           </form.Field>
 
-          <Button disabled={loginPending} type="submit">
+          <Button disabled={loginPending} type="submit" className="h-10 w-full">
             {loginPending ? (
               <>
                 <Spinner /> submitting
