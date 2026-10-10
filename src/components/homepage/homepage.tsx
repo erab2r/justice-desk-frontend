@@ -166,7 +166,7 @@ export default function Homepage() {
                 href="/apply"
                 className="inline-flex h-11 items-center rounded-md border border-white/30 bg-white/5 px-5 text-sm text-white hover:bg-white/10"
               >
-                Join as counsel
+                Join as Lawyer
               </Link>
             </div>
             <div className="mt-12 flex flex-wrap gap-x-7 gap-y-3 text-xs text-white/65">
@@ -223,7 +223,7 @@ export default function Homepage() {
             {[0, 1, 2].map((item) => (
               <div
                 key={item}
-                className="h-48 animate-pulse rounded-md border border-[#e3e9e5] bg-[#f4f7f5]"
+                className="h-48 animate-pulse rounded-xl border border-[#e3e9e5] bg-[#f4f7f5]"
               />
             ))}
           </div>
@@ -231,13 +231,13 @@ export default function Homepage() {
         {lawyers.isError ? (
           <div
             role="alert"
-            className="my-8 border-l-2 border-[#c2725f] bg-[#fbf6f3] px-4 py-3 text-sm text-[#744d41]"
+            className="my-8 rounded-xl border-l-2 border-[#c2725f] bg-[#fbf6f3] px-4 py-3 text-sm text-[#744d41]"
           >
             {getApiErrorMessage(lawyers.error)}
           </div>
         ) : null}
         {!lawyers.isPending && !lawyers.isError && lawyerList.length === 0 ? (
-          <div className="my-9 border border-dashed border-[#d5dfd8] px-5 py-12 text-center">
+          <div className="my-9 rounded-xl border border-dashed border-[#d5dfd8] px-5 py-12 text-center">
             <UserRound size={23} className="mx-auto text-[#799083]" />
             <p className="mt-3 text-sm font-medium text-[#45574c]">
               No lawyers found
@@ -252,7 +252,7 @@ export default function Homepage() {
             {lawyerList.map((lawyer) => (
               <article
                 key={lawyer.id}
-                className="flex min-h-50 flex-col border border-[#dfe7e1] bg-white p-5 transition-colors hover:border-[#9eb9a8]"
+                className="flex min-h-50 flex-col rounded-xl border border-[#dfe7e1] bg-white p-5 transition-colors hover:border-[#9eb9a8]"
               >
                 <div className="flex items-start gap-3">
                   <span className="grid size-11 shrink-0 place-items-center rounded-full bg-[#e8f0ea] text-sm font-semibold text-[#315b43]">
@@ -318,7 +318,7 @@ export default function Homepage() {
             {reasonsToChooseUs.map(({ icon: Icon, title, description }) => (
               <article
                 key={title}
-                className="border border-[#dfe7e1] bg-white p-5"
+                className="rounded-xl border border-[#dfe7e1] bg-white p-5"
               >
                 <span className="grid size-10 place-items-center rounded-md bg-[#e8f0ea] text-[#39715d]">
                   <Icon size={19} />
@@ -366,7 +366,7 @@ export default function Homepage() {
             {clientPerspectives.map(({ title, quote }) => (
               <article
                 key={title}
-                className="border border-white/15 bg-white/[0.06] p-5"
+                className="rounded-xl border border-white/15 bg-white/[0.06] p-5"
               >
                 <Quote size={20} className="text-[#e4bd7d]" />
                 <p className="mt-4 text-sm leading-6 text-white/90">
@@ -406,7 +406,7 @@ export default function Homepage() {
               ({ icon: Icon, area, title, description }) => (
                 <article
                   key={area}
-                  className="flex flex-col border border-[#e7e0d1] bg-[#fffefa] p-5"
+                  className="flex flex-col rounded-xl border border-[#e7e0d1] bg-[#fffefa] p-5"
                 >
                   <div className="flex items-center justify-between gap-3">
                     <span className="grid size-10 place-items-center rounded-md bg-[#f2ead9] text-[#80653b]">
@@ -459,7 +459,7 @@ export default function Homepage() {
             {legalDepartments.map(({ icon: Icon, name, description }) => (
               <article
                 key={name}
-                className="border border-[#dfe7e1] bg-white p-4 transition-colors hover:border-[#9eb9a8]"
+                className="rounded-xl border border-[#dfe7e1] bg-white p-4 transition-colors hover:border-[#9eb9a8]"
               >
                 <span className="grid size-9 place-items-center rounded-md bg-[#e8f0ea] text-[#39715d]">
                   <Icon size={17} />

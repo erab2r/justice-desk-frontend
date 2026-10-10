@@ -10,7 +10,6 @@ import {
   Gavel,
   LayoutDashboard,
   LogOut,
-  ReceiptText,
   Scale,
   UsersRound,
   Wallet,
@@ -38,7 +37,6 @@ const navByRole: Record<
     { label: "My cases", href: "/client/cases", icon: BriefcaseBusiness },
     { label: "Documents", href: "/client/documents", icon: FileText },
     { label: "Payments", href: "/client/payments", icon: Wallet },
-    { label: "Invoices", href: "/client/invoices", icon: ReceiptText },
   ],
   LAWYER: [
     { label: "Overview", href: "/lawyer", icon: LayoutDashboard },
@@ -46,27 +44,24 @@ const navByRole: Record<
     { label: "Availability", href: "/lawyer/schedules", icon: CalendarDays },
     { label: "Cases", href: "/lawyer/cases", icon: BriefcaseBusiness },
     { label: "Documents", href: "/lawyer/documents", icon: FileText },
-    { label: "Invoices", href: "/lawyer/invoices", icon: ReceiptText },
     { label: "Reports", href: "/lawyer/reports", icon: Gavel },
     { label: "Profile", href: "/lawyer/profile", icon: Scale },
   ],
   ADMIN: [
     { label: "Overview", href: "/admin", icon: LayoutDashboard },
-    { label: "Lawyer review", href: "/admin/approve-lawyer", icon: UsersRound },
+    { label: "Lawyers Panel", href: "/admin/approve-lawyer", icon: UsersRound },
     { label: "Cases", href: "/admin/cases", icon: BriefcaseBusiness },
     { label: "Appointments", href: "/admin/appointments", icon: CalendarDays },
     { label: "Payments", href: "/admin/payments", icon: Wallet },
     { label: "Specializations", href: "/admin/specializations", icon: Scale },
-    { label: "Invoices", href: "/admin/invoices", icon: ReceiptText },
   ],
   SUPER_ADMIN: [
     { label: "Overview", href: "/admin", icon: LayoutDashboard },
-    { label: "Lawyer review", href: "/admin/approve-lawyer", icon: UsersRound },
+    { label: "Lawyers Panel", href: "/admin/approve-lawyer", icon: UsersRound },
     { label: "Cases", href: "/admin/cases", icon: BriefcaseBusiness },
     { label: "Appointments", href: "/admin/appointments", icon: CalendarDays },
     { label: "Payments", href: "/admin/payments", icon: Wallet },
     { label: "Specializations", href: "/admin/specializations", icon: Scale },
-    { label: "Invoices", href: "/admin/invoices", icon: ReceiptText },
   ],
 };
 
@@ -106,18 +101,18 @@ export default function DashboardShell({
   }
 
   return (
-    <div className="min-h-screen bg-[#f5f7f6] text-[#19211e]">
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-62 flex-col border-r border-[#dfe6e2] bg-[#fbfcfb] lg:flex">
+    <div className="min-h-screen bg-[#f4f7f5] text-[#19211e]">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-[#dfe6e2] bg-[#fbfcfb] shadow-[4px_0_24px_-24px_rgba(23,61,48,0.3)] lg:flex">
         <Link
           href="/"
-          className="flex h-19 items-center gap-3 border-b border-[#e5ebe7] px-6"
+          className="flex h-20 items-center gap-3 border-b border-[#e5ebe7] px-5"
         >
-          <span className="grid size-9 place-items-center rounded-md bg-[#123d32] text-white">
+          <span className="grid size-10 place-items-center rounded-xl bg-[#123d32] text-white shadow-sm">
             <Scale size={19} />
           </span>
-          <span className="font-semibold tracking-[0.01em]">Justice Desk</span>
+          <span className="font-semibold tracking-[0.01em] text-[#1d3328]">Justice Desk</span>
         </Link>
-        <div className="px-5 pb-2 pt-6 text-[11px] font-semibold uppercase tracking-[0.13em] text-[#7b8982]">
+        <div className="px-5 pb-2 pt-6 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#7b8982]">
           {roleTitle[userRole]}
         </div>
         <nav className="flex-1 space-y-1 px-3 py-2">
@@ -130,7 +125,7 @@ export default function DashboardShell({
               <Link
                 key={href}
                 href={href}
-                className={`flex h-10 items-center gap-3 rounded-md px-3 text-[13px] transition-colors ${active ? "bg-[#e7efeb] font-semibold text-[#174638]" : "text-[#56635d] hover:bg-[#f0f4f1] hover:text-[#1d3c32]"}`}
+                className={`flex h-10 items-center gap-3 rounded-lg px-3 text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#56826c]/40 ${active ? "bg-[#e7efeb] font-semibold text-[#174638] shadow-[inset_2px_0_0_#39715d]" : "text-[#56635d] hover:bg-[#f0f4f1] hover:text-[#1d3c32]"}`}
               >
                 <Icon size={17} strokeWidth={1.8} />
                 {label}
@@ -142,7 +137,7 @@ export default function DashboardShell({
           })}
         </nav>
         <div className="border-t border-[#e5ebe7] p-4">
-          <div className="mb-3 flex items-center gap-3 px-1">
+          <div className="mb-3 flex items-center gap-3 rounded-xl bg-[#f4f7f5] p-2">
             <span className="relative grid size-9 shrink-0 place-items-center overflow-hidden rounded-full bg-[#dce9e2] text-sm font-semibold text-[#285441]">
               {user?.imageUrl ? (
                 <Image
@@ -204,14 +199,14 @@ export default function DashboardShell({
         </div>
       </aside>
 
-      <div className="lg:pl-62">
-        <header className="sticky top-0 z-20 border-b border-[#dfe6e2] bg-[#fbfcfb]/95 backdrop-blur">
+      <div className="lg:pl-64">
+        <header className="sticky top-0 z-20 border-b border-[#dfe6e2]/90 bg-[#fbfcfb]/90 shadow-[0_4px_18px_-18px_rgba(23,61,48,0.45)] backdrop-blur-xl">
           <div className="flex h-14.5 items-center justify-between px-4 sm:px-7">
             <div className="flex items-center gap-2 lg:hidden">
-              <span className="grid size-8 place-items-center rounded bg-[#123d32] text-white">
+              <span className="grid size-8 place-items-center rounded-lg bg-[#123d32] text-white">
                 <Scale size={17} />
               </span>
-              <span className="text-sm font-semibold">Justice Desk</span>
+              <span className="text-sm font-semibold text-[#1d3328]">Justice Desk</span>
             </div>
             <p className="hidden text-xs text-[#738079] lg:block">
               {roleTitle[userRole]}
@@ -228,19 +223,19 @@ export default function DashboardShell({
               </Link>
             </div>
           </div>
-          <nav className="flex gap-1 overflow-x-auto px-3 pb-2 lg:hidden">
+          <nav className="flex snap-x gap-1.5 overflow-x-auto px-3 pb-2 lg:hidden">
             {navigation.map(({ label, href }) => (
               <Link
                 key={href}
                 href={href}
-                className={`shrink-0 rounded px-3 py-1.5 text-xs ${pathname === href ? "bg-[#e7efeb] font-semibold text-[#174638]" : "text-[#647169] hover:bg-[#f0f4f1]"}`}
+                className={`shrink-0 snap-start rounded-lg px-3 py-2 text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#56826c]/40 ${pathname === href ? "bg-[#e7efeb] font-semibold text-[#174638]" : "text-[#647169] hover:bg-[#f0f4f1]"}`}
               >
                 {label}
               </Link>
             ))}
           </nav>
         </header>
-        <main className="mx-auto min-h-[calc(100vh-58px)] max-w-360 px-4 py-7 sm:px-7 lg:px-9 lg:py-9">
+        <main className="mx-auto min-h-[calc(100vh-58px)] max-w-360 px-4 py-6 sm:px-7 sm:py-8 lg:px-9 lg:py-9">
           {children}
         </main>
       </div>

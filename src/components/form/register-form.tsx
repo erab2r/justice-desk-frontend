@@ -86,10 +86,12 @@ export function RegisterForm() {
   });
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-5 sm:gap-6">
       <div className="flex flex-col items-center gap-2 text-center">
-        <h1 className="text-2xl font-bold tracking-tight">Create an account</h1>
-        <p className="text-sm text-muted-foreground">
+        <h1 className="text-xl font-semibold tracking-tight text-[#20372b] sm:text-2xl">
+          Create an account
+        </h1>
+        <p className="max-w-sm text-sm leading-6 text-muted-foreground">
           Enter your details below to create your account
         </p>
       </div>
@@ -101,7 +103,7 @@ export function RegisterForm() {
           form.handleSubmit();
         }}
       >
-        <FieldGroup>
+        <FieldGroup className="gap-4 sm:gap-5">
           <form.Field name="name">
             {(field) => {
               const isInvalid =
@@ -119,6 +121,7 @@ export function RegisterForm() {
                       onBlur={field.handleBlur}
                       onChange={(e) => field.handleChange(e.target.value)}
                       aria-invalid={isInvalid}
+                      className="h-10"
                       autoComplete="name"
                     />
                   </div>
@@ -145,6 +148,7 @@ export function RegisterForm() {
                       onBlur={field.handleBlur}
                       onChange={(e) => field.handleChange(e.target.value)}
                       aria-invalid={isInvalid}
+                      className="h-10"
                       autoComplete="off"
                     />
                   </div>
@@ -171,6 +175,7 @@ export function RegisterForm() {
                       onBlur={field.handleBlur}
                       onChange={(e) => field.handleChange(e.target.value)}
                       aria-invalid={isInvalid}
+                      className="h-10"
                       autoComplete="off"
                     />
                   </div>
@@ -198,13 +203,13 @@ export function RegisterForm() {
                       onBlur={field.handleBlur}
                       onChange={(e) => field.handleChange(e.target.value)}
                       aria-invalid={isInvalid}
-                      className="pr-10"
+                      className="h-10 pr-10"
                       autoComplete="off"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                       aria-label={
                         showPassword ? "Hide password" : "Show password"
                       }
@@ -239,7 +244,7 @@ export function RegisterForm() {
                       onBlur={field.handleBlur}
                       onChange={(e) => field.handleChange(e.target.value)}
                       aria-invalid={isInvalid}
-                      className="pr-10"
+                      className="h-10 pr-10"
                       autoComplete="off"
                     />
                     <button
@@ -247,7 +252,7 @@ export function RegisterForm() {
                       onClick={() =>
                         setShowConfirmPassword(!showConfirmPassword)
                       }
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                       aria-label={
                         showConfirmPassword ? "Hide password" : "Show password"
                       }
@@ -265,7 +270,11 @@ export function RegisterForm() {
             }}
           </form.Field>
 
-          <Button disabled={registrationPending} type="submit">
+          <Button
+            disabled={registrationPending}
+            type="submit"
+            className="h-10 w-full"
+          >
             {registrationPending ? (
               <>
                 <Spinner /> submitting

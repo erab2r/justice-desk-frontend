@@ -61,6 +61,11 @@ export interface Payment {
   amount: number | string;
   currency: string;
   paymentGateway: PaymentGateway;
+  merchantInvoiceNumber?: string;
+  stripePaymentIntentId?: string | null;
+  stripeSessionId?: string | null;
+  bkashPaymentId?: string | null;
+  bkashTrxId?: string | null;
   paidAt?: string | null;
   createdAt?: string;
   appointment?: Appointment;
@@ -97,9 +102,12 @@ function get<T>(
   path: string,
   params?: Record<string, string | number | undefined>,
 ) {
-  return apiClient
-    .get<ApiResponse<T>>(path, { params })
-    .then(({ data }) => data);
+  return apiClient.get<ApiResponse<T>>(path, { params }).then(({ data }) => {
+    if (!data.success) {
+      throw new Error(data.message || `The request to ${path} failed.`);
+    }
+    return data;
+  });
 }
 
 function post<T>(path: string, body?: unknown) {
@@ -122,6 +130,7 @@ export const justiceService = {
   reviewSpecialization: (body: {
     requestId: string;
     status: "APPROVED" | "REJECTED";
+    rejectionReason?: string;
   }) => patch<unknown>("/specialization/requests/review", body),
   createSpecialization: (body: { name: string; description?: string }) =>
     post<Specialization>("/specialization/", body),
@@ -134,14 +143,14 @@ export const justiceService = {
     role: UserRole,
     params?: Record<string, string | number | undefined>,
   ) => {
-    const path =
-      role === "CLIENT"
-        ? "/appointment/my-appointments"
-        : role === "LAWYER"
-          ? "/appointment/lawyer-appointments"
-          : "/appointment/all-appointments";
-    return get<Appointment[]>(path, params);
+    if (role === "CLIENT")
+      return get<Appointment[]>("/appointment/my-appointments", params);
+    if (role === "LAWYER")
+      return get<Appointment[]>("/appointment/lawyer-appointments", params);
+    return get<Appointment[]>("/appointment/all-appointments", params);
   },
+  allAppointments: (params?: Record<string, string | number | undefined>) =>
+    get<Appointment[]>("/appointment/all-appointments", params),
   appointment: (id: string) => get<Appointment>(`/appointment/${id}`),
   cancelAppointment: (appointmentId: string) =>
     post<{ appointment: Appointment; payment: Payment | null }>(
@@ -156,11 +165,13 @@ export const justiceService = {
   payments: (
     role: UserRole,
     params?: Record<string, string | number | undefined>,
-  ) =>
-    get<Payment[]>(
-      role === "CLIENT" ? "/payment/my-payments" : "/payment/all-payments",
-      params,
-    ),
+  ) => {
+    if (role === "ADMIN" || role === "SUPER_ADMIN")
+      return get<Payment[]>("/payment/all-payments", params);
+    return get<Payment[]>("/payment/my-payments", params);
+  },
+  allPayments: (params?: Record<string, string | number | undefined>) =>
+    get<Payment[]>("/payment/all-payments", params),
   payment: (id: string) => get<Payment>(`/payment/${id}`),
   invoices: (
     role: UserRole,

@@ -1,4 +1,6 @@
 export type LawyerVerificationStatus = "PENDING" | "APPROVED" | "REJECTED";
+export type LawyerAccountStatus = "ACTIVE" | "BLOCKED";
+export type LawyerDocumentType = "resume" | "additionalFile";
 
 export interface Specialization {
   id: string;
@@ -21,12 +23,15 @@ export interface Lawyer {
   consultationFee?: number | string | null;
   contactNumber?: string | null;
   address?: string | null;
+  resume?: string | null;
+  additionalFiles?: Array<{ url: string; publicId?: string }> | null;
   createdAt?: string;
   verificationStatus?: LawyerVerificationStatus;
   rejectionReason?: string | null;
   user?: {
     email: string;
     emailVerified: boolean;
+    status?: LawyerAccountStatus;
   };
   specializations?: LawyerSpecialization[];
 }
@@ -77,4 +82,13 @@ export interface UpdateLawyerProfilePayload {
   qualifications?: string;
   experienceYears?: number;
   specializationIds?: string[];
+}
+
+export interface UpdateLawyerStatusPayload {
+  status: LawyerAccountStatus;
+}
+
+export interface LawyerDocuments {
+  resume: { url: string; publicId?: string | null } | null;
+  additionalFiles: Array<{ url: string; publicId: string }>;
 }

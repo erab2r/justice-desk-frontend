@@ -13,9 +13,10 @@ export default function Header() {
   const logoutMutation = useLogout();
 
   const accountActionsPending = !user && (isPending || isFetching);
+  const findLawyerHref = "/lawyers";
 
   return (
-    <header className="relative z-30 border-b border-[#e3e9e5] bg-[#fbfcfb]">
+    <header className="sticky top-0 z-50 border-b border-[#e3e9e5] bg-[#fbfcfb]/95 backdrop-blur">
       <div className="mx-auto flex h-17 max-w-7xl items-center justify-between px-5 sm:px-8">
         <Link
           href="/"
@@ -27,14 +28,14 @@ export default function Header() {
           Justice Desk
         </Link>
         <nav className="hidden items-center gap-7 text-[13px] text-[#5e6a63] md:flex">
-          <Link href="/#counsel" className="hover:text-[#174638]">
-            Find counsel
+          <Link href={findLawyerHref} className="hover:text-[#174638]">
+            Find Lawyer
           </Link>
           <Link href="/about-us" className="hover:text-[#174638]">
             About
           </Link>
           <Link href="/apply" className="hover:text-[#174638]">
-            For lawyers
+            Apply for Lawyer
           </Link>
         </nav>
         <div className="hidden items-center gap-2 md:flex">
@@ -108,9 +109,9 @@ export default function Header() {
           <Link
             onClick={() => setOpen(false)}
             className="rounded px-3 py-2.5 text-sm text-[#42564b] hover:bg-[#eef3ef]"
-            href="/#counsel"
+            href={findLawyerHref}
           >
-            Find counsel
+            Find Lawyer
           </Link>
           <Link
             onClick={() => setOpen(false)}
@@ -124,7 +125,7 @@ export default function Header() {
             className="rounded px-3 py-2.5 text-sm text-[#42564b] hover:bg-[#eef3ef]"
             href="/apply"
           >
-            For lawyers
+            Apply for Lawyer
           </Link>
           <div className="mt-1 flex items-center gap-2 px-2">
             {user ? (

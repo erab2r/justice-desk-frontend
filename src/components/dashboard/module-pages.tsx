@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { isAfter, isBefore, isValid, parseISO } from "date-fns";
-import { ArrowDownToLine, Check, Search, X } from "lucide-react";
+import { Check, Search, X } from "lucide-react";
 import Link from "next/link";
 import { type FormEvent, useState } from "react";
 import { toast } from "sonner";
@@ -12,6 +12,7 @@ import {
   PageHeading,
   StatusLabel,
 } from "@/components/dashboard/data-table";
+import LawyerReviewSheet from "@/components/modules/lawyer-approval/lawyer-review-sheet";
 import BookAppointmentAction from "@/components/modules/payments/book-appointment-action";
 import PayAppointmentAction from "@/components/modules/payments/pay-appointment-action";
 import PaymentReturnNotice from "@/components/modules/payments/payment-return-notice";
@@ -21,14 +22,16 @@ import {
   useApproveLawyer,
   useGetAllLawyers,
   useGetPublicLawyers,
+  useSpecializations,
 } from "@/hooks/lawyer.hook";
 import { useAvailableSchedules } from "@/hooks/schedule.hook";
 import { getApiErrorMessage } from "@/lib/apiClient";
 import {
   type Appointment,
-  type Invoice,
   justiceService,
+  type PaginationMeta,
   type Payment,
+  type UserRole,
 } from "@/services/justice.service";
 import type { Lawyer, Specialization } from "@/types/lawyer.type";
 import type { Schedule } from "@/types/schedule.type";
@@ -85,41 +88,94 @@ function useSessionRole() {
   return data?.role ?? "CLIENT";
 }
 
-export function LawyerDirectoryPage() {
+export function LawyerDirectoryPage({
+  publicView = false,
+}: {
+  publicView?: boolean;
+}) {
   const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState("createdAt");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [specializationId, setSpecializationId] = useState("");
   const [selectedLawyer, setSelectedLawyer] = useState<string>();
+  const specializations = useSpecializations();
   const lawyers = useGetPublicLawyers({
     page: 1,
-    limit: 24,
+    limit: 100,
     ...(search ? { searchTerm: search } : {}),
+    sortBy,
+    sortOrder,
   });
   const schedules = useAvailableSchedules(
     { page: 1, limit: 20, lawyerId: selectedLawyer },
     Boolean(selectedLawyer),
   );
-  const rows = lawyers.data?.data ?? [];
+  const rows = (lawyers.data?.data ?? []).filter(
+    (lawyer) =>
+      !specializationId ||
+      lawyer.specializations?.some(
+        ({ specialization }) => specialization.id === specializationId,
+      ),
+  );
   return (
-    <div>
+    <div className="mx-auto max-w-6xl px-5 py-5">
       <PageHeading
-        eyebrow="Find counsel"
-        title="Lawyer directory"
+        eyebrow="Find Lawyer"
+        title="Find a lawyer"
         description="Browse public profiles and available appointment schedules returned by Justice Desk."
       />
-      <div className="relative mb-5 block max-w-sm">
-        <label className="sr-only" htmlFor="lawyer-search">
-          Search lawyers
+      <div className="mb-5 grid gap-3 md:grid-cols-[2fr_1fr_1fr]">
+        <div className="relative">
+          <label className="sr-only" htmlFor="lawyer-search">
+            Search lawyers
+          </label>
+          <Search
+            size={15}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-[#839087]"
+          />
+          <input
+            id="lawyer-search"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search by lawyer or qualification"
+            className={`${controlClass} pl-9`}
+          />
+        </div>
+        <label className="sr-only" htmlFor="lawyer-specialization">
+          Filter by practice area
         </label>
-        <Search
-          size={15}
-          className="absolute left-3 top-1/2 -translate-y-1/2 text-[#839087]"
-        />
-        <input
-          id="lawyer-search"
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-          placeholder="Search by lawyer or qualification"
-          className={`${controlClass} pl-9`}
-        />
+        <select
+          id="lawyer-specialization"
+          value={specializationId}
+          onChange={(event) => setSpecializationId(event.target.value)}
+          className={controlClass}
+        >
+          <option value="">All practice areas</option>
+          {(specializations.data?.data ?? []).map((specialization) => (
+            <option key={specialization.id} value={specialization.id}>
+              {specialization.name}
+            </option>
+          ))}
+        </select>
+        <label className="sr-only" htmlFor="lawyer-sort">
+          Sort lawyers
+        </label>
+        <select
+          id="lawyer-sort"
+          value={`${sortBy}:${sortOrder}`}
+          onChange={(event) => {
+            const [nextSortBy, nextSortOrder] = event.target.value.split(":");
+            setSortBy(nextSortBy);
+            setSortOrder(nextSortOrder as "asc" | "desc");
+          }}
+          className={controlClass}
+        >
+          <option value="createdAt:desc">Newest first</option>
+          <option value="name:asc">Name A-Z</option>
+          <option value="name:desc">Name Z-A</option>
+          <option value="consultationFee:asc">Lowest fee</option>
+          <option value="consultationFee:desc">Highest fee</option>
+        </select>
       </div>
       {lawyers.isError && <ErrorMessage error={lawyers.error} />}
       {lawyers.isPending ? (
@@ -127,13 +183,13 @@ export function LawyerDirectoryPage() {
           {[0, 1, 2].map((key) => (
             <div
               key={key}
-              className="h-44 animate-pulse border border-[#e0e7e2] bg-white"
+              className="h-44 animate-pulse rounded-xl border border-[#e0e7e2] bg-white"
             />
           ))}
         </div>
       ) : null}
       {!lawyers.isPending && rows.length === 0 ? (
-        <div className="border border-dashed border-[#d5dfd8] bg-white px-5 py-14 text-center text-sm text-[#78857d]">
+        <div className="rounded-xl border border-dashed border-[#d5dfd8] bg-white px-5 py-14 text-center text-sm text-[#78857d]">
           No public lawyers match this search.
         </div>
       ) : null}
@@ -141,7 +197,7 @@ export function LawyerDirectoryPage() {
         {rows.map((lawyer) => (
           <article
             key={lawyer.id}
-            className="border border-[#dfe6e2] bg-white p-4"
+            className="rounded-xl border border-[#dfe6e2] bg-white p-4 shadow-[0_8px_28px_-24px_rgba(23,61,48,0.28)] transition-shadow hover:shadow-[0_12px_32px_-24px_rgba(23,61,48,0.38)]"
           >
             <div className="flex gap-3">
               <span className="grid size-10 shrink-0 place-items-center rounded-full bg-[#e8f0ea] text-sm font-semibold text-[#315b43]">
@@ -225,7 +281,7 @@ export function LawyerDirectoryPage() {
                     .map((schedule) => (
                       <div
                         key={schedule.id}
-                        className="flex items-center justify-between gap-3 rounded border border-[#e5ebe7] px-2.5 py-2"
+                        className="flex items-center justify-between gap-3 rounded-lg border border-[#e5ebe7] bg-[#fbfcfb] px-3 py-2.5"
                       >
                         <div>
                           <p className="text-xs font-medium text-[#38483e]">
@@ -236,10 +292,19 @@ export function LawyerDirectoryPage() {
                             spaces
                           </p>
                         </div>
-                        <BookAppointmentAction
-                          scheduleId={schedule.id}
-                          disabled={schedule.availableSlots < 1}
-                        />
+                        {publicView ? (
+                          <Link
+                            href={`/login?next=${encodeURIComponent("/client/lawyers")}`}
+                            className="text-xs font-semibold text-[#39715d] hover:underline"
+                          >
+                            Sign in to book
+                          </Link>
+                        ) : (
+                          <BookAppointmentAction
+                            scheduleId={schedule.id}
+                            disabled={schedule.availableSlots < 1}
+                          />
+                        )}
                       </div>
                     ))}
                 </div>
@@ -257,13 +322,17 @@ export function LawyerDirectoryPage() {
   );
 }
 
-export function AppointmentsPage() {
-  const role = useSessionRole();
+export function AppointmentsPage({ accountRole }: { accountRole: UserRole }) {
+  const role = accountRole;
   const appointmentRouteRole =
     role === "SUPER_ADMIN" || role === "ADMIN" ? "admin" : role.toLowerCase();
+  const [page, setPage] = useState(1);
   const queries = useQuery({
-    queryKey: ["appointments", role],
-    queryFn: () => justiceService.appointments(role, { page: 1, limit: 50 }),
+    queryKey: ["appointments", role, page],
+    queryFn: () =>
+      role === "ADMIN" || role === "SUPER_ADMIN"
+        ? justiceService.allAppointments({ page, limit: 10 })
+        : justiceService.appointments(role, { page, limit: 10 }),
   });
   const invalidate = useRefreshQueries([
     "appointments",
@@ -449,6 +518,15 @@ export function AppointmentsPage() {
                 Cancel
               </SmallAction>
             )}
+          {(role === "ADMIN" || role === "SUPER_ADMIN") &&
+            !["CANCELLED", "COMPLETED"].includes(item.status) && (
+              <SmallAction
+                onClick={() => perform("cancel", item)}
+                disabled={mutation.isPending}
+              >
+                Cancel
+              </SmallAction>
+            )}
           {role === "LAWYER" && item.status === "CONFIRMED" && (
             <SmallAction
               onClick={() => perform("ongoing", item)}
@@ -480,7 +558,11 @@ export function AppointmentsPage() {
       <PageHeading
         eyebrow="Scheduling"
         title="Appointments"
-        description="Bookings, serial numbers, payment states, and appointment actions from the service."
+        description={
+          role === "ADMIN" || role === "SUPER_ADMIN"
+            ? "All client and lawyer appointments, including booking and payment status."
+            : "Bookings, serial numbers, payment states, and appointment actions from the service."
+        }
       />
       <PaymentReturnNotice />
       <DataTable
@@ -491,12 +573,12 @@ export function AppointmentsPage() {
         emptyTitle="No appointments found"
         emptyDescription="Appointment records will appear here after a booking is started."
       />
-      {queries.data?.meta && (
-        <p className="mt-3 text-right text-[10px] text-[#89948d]">
-          Page {queries.data.meta.page} · {queries.data.meta.total} total
-          records
-        </p>
-      )}
+      <HistoryPagination
+        page={page}
+        meta={queries.data?.meta}
+        isLoading={queries.isFetching}
+        onPageChange={setPage}
+      />
     </div>
   );
 }
@@ -536,11 +618,64 @@ function isInSchedule(schedule?: Schedule) {
   );
 }
 
-export function PaymentsPage() {
-  const role = useSessionRole();
+function HistoryPagination({
+  page,
+  meta,
+  isLoading,
+  onPageChange,
+}: {
+  page: number;
+  meta?: PaginationMeta;
+  isLoading: boolean;
+  onPageChange: (page: number) => void;
+}) {
+  if (!meta) return null;
+
+  const firstRecord = meta.total === 0 ? 0 : (page - 1) * meta.limit + 1;
+  const lastRecord = Math.min(page * meta.limit, meta.total);
+
+  return (
+    <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-[11px] text-[#748178]">
+      <p>
+        Showing {firstRecord}–{lastRecord} of {meta.total} records
+      </p>
+      {meta.totalPages > 1 && (
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            disabled={isLoading || page <= 1}
+            onClick={() => onPageChange(page - 1)}
+          >
+            Previous
+          </Button>
+          <span>
+            Page {page} of {meta.totalPages}
+          </span>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            disabled={isLoading || page >= meta.totalPages}
+            onClick={() => onPageChange(page + 1)}
+          >
+            Next
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function PaymentsPage({ accountRole }: { accountRole: UserRole }) {
+  const [page, setPage] = useState(1);
   const payments = useQuery({
-    queryKey: ["payments", role],
-    queryFn: () => justiceService.payments(role, { page: 1, limit: 50 }),
+    queryKey: ["payments", accountRole, page],
+    queryFn: () =>
+      accountRole === "ADMIN" || accountRole === "SUPER_ADMIN"
+        ? justiceService.allPayments({ page, limit: 10 })
+        : justiceService.payments(accountRole, { page, limit: 10 }),
   });
   const rows = payments.data?.data ?? [];
   const columns = [
@@ -566,16 +701,41 @@ export function PaymentsPage() {
       render: (item: Payment) => item.paymentGateway,
     },
     {
+      key: "gatewayReference",
+      label: "Payment intent / transaction ID",
+      render: (item: Payment) => {
+        const reference =
+          item.paymentGateway === "STRIPE"
+            ? (item.stripePaymentIntentId ?? item.stripeSessionId)
+            : (item.bkashTrxId ?? item.bkashPaymentId);
+
+        return reference ?? item.merchantInvoiceNumber ?? "Pending";
+      },
+    },
+    {
       key: "reference",
       label: "Appointment",
       render: (item: Payment) =>
         item.appointment?.id ? (
-          <Link
-            href={`/${role.toLowerCase()}/appointments/${item.appointment.id}`}
-            className="text-[#39715d] hover:underline"
-          >
-            {item.appointment.id.slice(0, 8)}
-          </Link>
+          <div>
+            <Link
+              href={`/${accountRole.toLowerCase()}/appointments/${item.appointment.id}`}
+              className="text-[#39715d] hover:underline"
+            >
+              {item.appointment.id.slice(0, 8)}
+            </Link>
+            <span className="mt-1 block text-[10px] text-[#839087]">
+              {item.appointment.client?.name ?? "Client not listed"} ·{" "}
+              {item.appointment.lawyer?.name ?? "Lawyer not listed"}
+            </span>
+            {item.appointment.schedule?.startDateTime && (
+              <span className="mt-1 block text-[10px] text-[#839087]">
+                {new Date(
+                  item.appointment.schedule.startDateTime,
+                ).toLocaleDateString()}
+              </span>
+            )}
+          </div>
         ) : (
           "—"
         ),
@@ -591,7 +751,11 @@ export function PaymentsPage() {
       <PageHeading
         eyebrow="Billing"
         title="Payments"
-        description="Payment records and gateway status returned for your account."
+        description={
+          accountRole === "ADMIN" || accountRole === "SUPER_ADMIN"
+            ? "Payment history across all accounts, with gateway and payment status."
+            : "Your payment history and gateway status."
+        }
       />
       <DataTable
         columns={columns}
@@ -603,6 +767,12 @@ export function PaymentsPage() {
         emptyTitle="No payment records"
         emptyDescription="A payment record appears after an appointment payment is initiated."
       />
+      <HistoryPagination
+        page={page}
+        meta={payments.data?.meta}
+        isLoading={payments.isFetching}
+        onPageChange={setPage}
+      />
       <p className="mt-3 text-[10px] text-[#87938c]">
         Payments are initiated and confirmed by the configured Stripe or bKash
         service.
@@ -611,98 +781,25 @@ export function PaymentsPage() {
   );
 }
 
-export function InvoicesPage() {
-  const role = useSessionRole();
-  const invoices = useQuery({
-    queryKey: ["invoices", role],
-    queryFn: () => justiceService.invoices(role, { page: 1, limit: 50 }),
-  });
-  const rows = invoices.data?.data ?? [];
-  const columns = [
-    {
-      key: "number",
-      label: "Invoice",
-      render: (item: Invoice) => (
-        <span className="font-semibold">{item.invoiceNumber}</span>
-      ),
-    },
-    {
-      key: "case",
-      label: "Case",
-      render: (item: Invoice) => item.case?.caseNumber ?? "—",
-    },
-    {
-      key: "date",
-      label: "Issued",
-      render: (item: Invoice) =>
-        new Date(item.invoiceDate).toLocaleDateString(),
-    },
-    {
-      key: "due",
-      label: "Due",
-      render: (item: Invoice) =>
-        item.dueDate ? new Date(item.dueDate).toLocaleDateString() : "—",
-    },
-    {
-      key: "total",
-      label: "Total",
-      render: (item: Invoice) =>
-        `${item.currency} ${Number(item.totalAmount).toLocaleString()}`,
-    },
-    {
-      key: "status",
-      label: "Status",
-      render: (item: Invoice) => <StatusLabel>{item.status}</StatusLabel>,
-    },
-    {
-      key: "pdf",
-      label: "Document",
-      render: (item: Invoice) =>
-        item.pdfUrl ? (
-          <a
-            href={item.pdfUrl}
-            target="_blank"
-            rel="noreferrer"
-            aria-label={`Open invoice ${item.invoiceNumber}`}
-            className="inline-flex items-center gap-1 text-xs text-[#39715d] hover:underline"
-          >
-            <ArrowDownToLine size={14} /> PDF
-          </a>
-        ) : (
-          "—"
-        ),
-    },
-  ];
-  return (
-    <div>
-      <PageHeading
-        eyebrow="Billing"
-        title="Invoices"
-        description="Invoice details, due dates, statuses, and available PDF documents."
-      />
-      <DataTable
-        columns={columns}
-        rows={rows}
-        isLoading={invoices.isPending}
-        error={
-          invoices.isError ? getApiErrorMessage(invoices.error) : undefined
-        }
-        emptyTitle="No invoices found"
-        emptyDescription="Invoices associated with your cases will appear here."
-      />
-    </div>
-  );
-}
-
 export function LawyerReviewPage() {
-  const lawyers = useGetAllLawyers({ page: 1, limit: 100 });
+  const [showApplications, setShowApplications] = useState(false);
+  const lawyerParams = {
+    page: 1,
+    limit: 100,
+    ...(showApplications ? { verificationStatus: "PENDING" as const } : {}),
+  };
+  const lawyers = useGetAllLawyers(lawyerParams);
+  const pendingApplications = useGetAllLawyers({
+    page: 1,
+    limit: 1,
+    verificationStatus: "PENDING",
+  });
   const reviewMutation = useApproveLawyer();
   const [rejectionId, setRejectionId] = useState<string>();
+  const [selectedLawyerId, setSelectedLawyerId] = useState<string>();
   const [reason, setReason] = useState("");
   const [busyId, setBusyId] = useState<string>();
-  const rows = (lawyers.data?.data ?? []).filter(
-    (lawyer) => lawyer.verificationStatus === "PENDING",
-  );
+  const rows = lawyers.data?.data ?? [];
   async function review(lawyer: Lawyer, status: "APPROVED" | "REJECTED") {
     if (
       status === "REJECTED" &&
@@ -765,21 +862,29 @@ export function LawyerReviewPage() {
       label: "Review",
       render: (item: Lawyer) => (
         <div className="flex flex-wrap gap-1.5">
-          <SmallAction
-            disabled={busyId === item.id}
-            onClick={() => review(item, "APPROVED")}
-          >
-            <Check size={12} /> Approve
+          {item.verificationStatus === "PENDING" && (
+            <SmallAction
+              disabled={busyId === item.id || !item.user?.emailVerified}
+              onClick={() => review(item, "APPROVED")}
+            >
+              <Check size={12} />{" "}
+              {item.user?.emailVerified ? "Approve" : "Email not verified"}
+            </SmallAction>
+          )}
+          <SmallAction onClick={() => setSelectedLawyerId(item.id)}>
+            Details
           </SmallAction>
-          <SmallAction
-            disabled={busyId === item.id}
-            onClick={() => {
-              setRejectionId(rejectionId === item.id ? undefined : item.id);
-              setReason("");
-            }}
-          >
-            <X size={12} /> Reject
-          </SmallAction>
+          {item.verificationStatus === "PENDING" && (
+            <SmallAction
+              disabled={busyId === item.id || !item.user?.emailVerified}
+              onClick={() => {
+                setRejectionId(rejectionId === item.id ? undefined : item.id);
+                setReason("");
+              }}
+            >
+              <X size={12} /> Reject
+            </SmallAction>
+          )}
         </div>
       ),
     },
@@ -788,9 +893,41 @@ export function LawyerReviewPage() {
     <div>
       <PageHeading
         eyebrow="Administration"
-        title="Lawyer applications"
-        description="Pending applicants returned by the lawyer management endpoint."
+        title="Lawyers Panel"
+        description={
+          showApplications
+            ? "Review pending lawyer applications."
+            : "View all lawyers and their current verification status."
+        }
       />
+      <div className="mb-4 flex gap-2">
+        <Button
+          type="button"
+          variant={showApplications ? "outline" : "default"}
+          onClick={() => {
+            setShowApplications(false);
+            setRejectionId(undefined);
+          }}
+        >
+          All lawyers
+        </Button>
+        <Button
+          type="button"
+          variant={showApplications ? "default" : "outline"}
+          onClick={() => {
+            setShowApplications(true);
+            setRejectionId(undefined);
+          }}
+        >
+          <span>Lawyer applications</span>
+          <span
+            title={`${pendingApplications.data?.meta?.total ?? 0} pending applications`}
+            className="ml-1 grid min-w-5 place-items-center rounded-full bg-[#9a4f42] px-1.5 py-0.5 text-[10px] leading-none text-white"
+          >
+            {pendingApplications.data?.meta?.total ?? 0}
+          </span>
+        </Button>
+      </div>
       {rejectionId && (
         <form
           onSubmit={(event) => {
@@ -798,7 +935,7 @@ export function LawyerReviewPage() {
             const lawyer = rows.find((item) => item.id === rejectionId);
             if (lawyer) void review(lawyer, "REJECTED");
           }}
-          className="mb-4 flex flex-col gap-2 border border-[#ead8d3] bg-[#fffaf8] p-4 sm:flex-row sm:items-end"
+          className="mb-4 flex flex-col gap-2 rounded-xl border border-[#ead8d3] bg-[#fffaf8] p-4 sm:flex-row sm:items-end"
         >
           <div className="flex-1">
             <label className={fieldLabel} htmlFor="reject-reason">
@@ -831,9 +968,22 @@ export function LawyerReviewPage() {
         rows={rows}
         isLoading={lawyers.isPending}
         error={lawyers.isError ? getApiErrorMessage(lawyers.error) : undefined}
-        emptyTitle="No pending applications"
-        emptyDescription="There are no pending lawyer applications in the current response."
+        emptyTitle={
+          showApplications ? "No pending applications" : "No lawyers found"
+        }
+        emptyDescription={
+          showApplications
+            ? "There are no pending lawyer applications in the current response."
+            : "No lawyers were returned by the management endpoint."
+        }
       />
+      {selectedLawyerId && (
+        <LawyerReviewSheet
+          selectedId={selectedLawyerId}
+          onClose={() => setSelectedLawyerId(undefined)}
+          {...lawyerParams}
+        />
+      )}
     </div>
   );
 }
@@ -876,6 +1026,8 @@ export function SpecializationsPage() {
   const [editName, setEditName] = useState("");
   const [editDescription, setEditDescription] = useState("");
   const [updateError, setUpdateError] = useState("");
+  const [rejectionRequestId, setRejectionRequestId] = useState<string>();
+  const [rejectionReason, setRejectionReason] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   async function create(event: FormEvent<HTMLFormElement>) {
@@ -913,7 +1065,8 @@ export function SpecializationsPage() {
       setUpdateError(getApiErrorMessage(caught));
     }
   }
-  const requestRows = (requests.data?.data ?? [])
+  type SpecializationRequestRow = Record<string, unknown> & { id: string };
+  const requestRows: SpecializationRequestRow[] = (requests.data?.data ?? [])
     .filter(
       (value): value is Record<string, unknown> =>
         typeof value === "object" && value !== null && "id" in value,
@@ -923,7 +1076,7 @@ export function SpecializationsPage() {
       id: String(value.id),
       status: String(value.status ?? "PENDING"),
     }));
-  const requestColumns = [
+  const requestColumns: DataColumn<SpecializationRequestRow>[] = [
     {
       key: "lawyer",
       label: "Lawyer",
@@ -939,7 +1092,12 @@ export function SpecializationsPage() {
       label: "Specialization",
       render: (item: Record<string, unknown>) => {
         const spec = item.specialization as { name?: string } | undefined;
-        return spec?.name ?? "Requested specialization";
+        return (
+          spec?.name ??
+          (typeof item.newPracticeArea === "string"
+            ? item.newPracticeArea
+            : "Requested specialization")
+        );
       },
     },
     {
@@ -952,32 +1110,77 @@ export function SpecializationsPage() {
     {
       key: "action",
       label: "Review",
-      render: (item: Record<string, unknown>) =>
-        item.status === "PENDING" ? (
+      render: (item: Record<string, unknown>) => {
+        const requestId = String(item.id);
+        if (item.status !== "PENDING") return "—";
+
+        if (rejectionRequestId === requestId) {
+          return (
+            <div className="flex min-w-56 flex-col gap-2">
+              <textarea
+                value={rejectionReason}
+                onChange={(event) => setRejectionReason(event.target.value)}
+                placeholder="Reason for rejection"
+                rows={2}
+                maxLength={500}
+                className="w-full rounded-md border border-[#d9e2dc] bg-white px-2 py-1.5 text-xs outline-none focus:border-[#56826c] focus:ring-2 focus:ring-[#56826c]/15"
+              />
+              <div className="flex gap-2">
+                <SmallAction
+                  disabled={rejectionReason.trim().length < 3}
+                  onClick={() =>
+                    void reviewRequest(requestId, "REJECTED", rejectionReason)
+                  }
+                >
+                  Confirm
+                </SmallAction>
+                <SmallAction
+                  onClick={() => {
+                    setRejectionRequestId(undefined);
+                    setRejectionReason("");
+                  }}
+                >
+                  Cancel
+                </SmallAction>
+              </div>
+            </div>
+          );
+        }
+
+        return (
           <div className="flex gap-2">
             <SmallAction
-              onClick={() => void reviewRequest(String(item.id), "APPROVED")}
+              onClick={() => void reviewRequest(requestId, "APPROVED")}
             >
               Approve
             </SmallAction>
             <SmallAction
-              onClick={() => void reviewRequest(String(item.id), "REJECTED")}
+              onClick={() => {
+                setRejectionRequestId(requestId);
+                setRejectionReason("");
+              }}
             >
               Reject
             </SmallAction>
           </div>
-        ) : (
-          "—"
-        ),
+        );
+      },
     },
   ];
   async function reviewRequest(
     requestId: string,
     status: "APPROVED" | "REJECTED",
+    reason?: string,
   ) {
     try {
-      await reviewMutation.mutateAsync({ requestId, status });
+      await reviewMutation.mutateAsync({
+        requestId,
+        status,
+        ...(status === "REJECTED" && { rejectionReason: reason?.trim() }),
+      });
       toast.success(`Request ${status.toLowerCase()}`);
+      setRejectionRequestId(undefined);
+      setRejectionReason("");
       invalidate();
     } catch (caught) {
       toast.error(getApiErrorMessage(caught));
@@ -1023,7 +1226,7 @@ export function SpecializationsPage() {
       {(role === "ADMIN" || role === "SUPER_ADMIN") && (
         <form
           onSubmit={create}
-          className="mb-5 grid gap-3 border border-[#dfe6e2] bg-white p-4 sm:grid-cols-[1fr_2fr_auto]"
+          className="mb-5 grid gap-3 rounded-xl border border-[#dfe6e2] bg-white p-4 shadow-sm sm:grid-cols-[1fr_2fr_auto]"
         >
           <div>
             <label className={fieldLabel} htmlFor="specialization-name">
@@ -1065,7 +1268,7 @@ export function SpecializationsPage() {
       {editingSpecialization && (
         <form
           onSubmit={updateSpecialization}
-          className="mb-5 grid gap-3 border border-[#dfe6e2] bg-white p-4 sm:grid-cols-[1fr_2fr_auto]"
+          className="mb-5 grid gap-3 rounded-xl border border-[#dfe6e2] bg-white p-4 shadow-sm sm:grid-cols-[1fr_2fr_auto]"
         >
           <div>
             <label className={fieldLabel} htmlFor="edit-specialization-name">
@@ -1138,7 +1341,7 @@ export function SpecializationsPage() {
         {(role === "ADMIN" || role === "SUPER_ADMIN") && (
           <section>
             <h2 className="mb-3 text-sm font-semibold text-[#293d31]">
-              Lawyer requests
+              Specialization requests
             </h2>
             <DataTable
               columns={requestColumns}

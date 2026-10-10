@@ -69,6 +69,8 @@ apiClient.interceptors.response.use(
       request._retry ||
       url.includes("/auth/login") ||
       url.includes("/auth/google") ||
+      url.includes("/auth/forgot-password") ||
+      url.includes("/auth/reset-password") ||
       url.includes("/auth/refresh-token")
     ) {
       return Promise.reject(error);

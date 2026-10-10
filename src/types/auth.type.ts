@@ -32,6 +32,7 @@ export interface LawyerApplicationPayload {
     consultationFee?: number;
     contactNumber?: string;
     specializationIds: string[];
+    newPracticeArea?: string;
   };
   resume?: File;
   additionalFiles?: File[];

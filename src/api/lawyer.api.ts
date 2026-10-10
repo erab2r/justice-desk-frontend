@@ -1,17 +1,20 @@
 import apiClient from "@/lib/apiClient";
 import type { ApiResponse } from "@/types/api.type";
 import type {
+  LawyerApplicationPayload,
+  VerifyAccountPayload,
+} from "@/types/auth.type";
+import type {
   ApproveLawyerPayload,
   Lawyer,
+  LawyerDocuments,
+  LawyerDocumentType,
   LawyerParams,
   PublicLawyerParams,
   PublicLawyerProfile,
   UpdateLawyerProfilePayload,
+  UpdateLawyerStatusPayload,
 } from "@/types/lawyer.type";
-import type {
-  LawyerApplicationPayload,
-  VerifyAccountPayload,
-} from "@/types/auth.type";
 
 export function applyAsLawyer(payload: LawyerApplicationPayload) {
   const formData = new FormData();
@@ -53,6 +56,65 @@ export function approveLawyer(payload: ApproveLawyerPayload) {
 export function updateLawyerProfile(payload: UpdateLawyerProfilePayload) {
   return apiClient
     .patch<ApiResponse<Lawyer>>("/lawyer/profile", payload)
+    .then(({ data }) => data);
+}
+
+export function updateManagedLawyerProfile(
+  lawyerId: string,
+  payload: UpdateLawyerProfilePayload,
+) {
+  return apiClient
+    .patch<ApiResponse<Lawyer>>(`/lawyer/${lawyerId}/profile`, payload)
+    .then(({ data }) => data);
+}
+
+export function updateLawyerStatus(
+  lawyerId: string,
+  payload: UpdateLawyerStatusPayload,
+) {
+  return apiClient
+    .patch<ApiResponse<unknown>>(`/lawyer/${lawyerId}/status`, payload)
+    .then(({ data }) => data);
+}
+
+export function suspendLawyer(lawyerId: string, suspended: boolean) {
+  return apiClient
+    .patch<ApiResponse<unknown>>(`/lawyer/${lawyerId}/suspension`, {
+      suspended,
+    })
+    .then(({ data }) => data);
+}
+
+export function deleteLawyer(lawyerId: string) {
+  return apiClient
+    .delete<ApiResponse<null>>(`/lawyer/${lawyerId}`)
+    .then(({ data }) => data);
+}
+
+export function getLawyerDocuments(lawyerId: string) {
+  return apiClient
+    .get<ApiResponse<LawyerDocuments>>(`/lawyer/${lawyerId}/documents`)
+    .then(({ data }) => data);
+}
+
+export function updateLawyerDocuments(lawyerId: string, formData: FormData) {
+  return apiClient
+    .patch<ApiResponse<LawyerDocuments>>(
+      `/lawyer/${lawyerId}/documents`,
+      formData,
+      { headers: { "Content-Type": "multipart/form-data" } },
+    )
+    .then(({ data }) => data);
+}
+
+export function deleteLawyerDocument(
+  lawyerId: string,
+  payload: { documentType: LawyerDocumentType; publicId?: string },
+) {
+  return apiClient
+    .delete<ApiResponse<LawyerDocuments>>(`/lawyer/${lawyerId}/documents`, {
+      data: payload,
+    })
     .then(({ data }) => data);
 }
 

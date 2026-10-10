@@ -9,6 +9,7 @@ export default function ApplyPage() {
       eyebrow="Counsel onboarding"
       title="Apply to join the legal network"
       description="Provide your professional details for administrator review. Email verification follows submission."
+      stacked
       footer={
         <>
           Already have an account?{" "}

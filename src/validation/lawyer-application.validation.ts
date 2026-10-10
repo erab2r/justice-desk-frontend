@@ -36,60 +36,69 @@ export const getCustomFileSchema = <T>(message: string) =>
     },
   );
 
-export const lawyerApplicationSchema = z.object({
-  name: z
-    .string()
-    .trim()
-    .min(2, "Full name must be at least 2 characters long"),
-  email: z.email("Please enter a valid email address"),
-  phone: z.string().trim().min(5, "Contact number is invalid"),
-  address: z.string().trim(),
-  specializationIds: z
-    .array(z.string().min(1))
-    .min(1, "Select at least one practice area"),
-  licenseNumber: z.string().trim().min(3, "License number is required"),
-  qualifications: z.string().trim().min(2, "Qualifications are required"),
-  experienceYears: z
-    .string()
-    .trim()
-    .refine((value) => /^\d+$/.test(value), {
-      message: "Years of experience must be whole value",
-    })
-    .refine((value) => Number(value) >= 0 && Number(value) <= 60, {
-      message: "Years of experience must be between 0 and 60",
+export const lawyerApplicationSchema = z
+  .object({
+    name: z
+      .string()
+      .trim()
+      .min(2, "Full name must be at least 2 characters long"),
+    email: z.email("Please enter a valid email address"),
+    phone: z.string().trim().min(5, "Contact number is invalid"),
+    address: z.string().trim(),
+    specializationIds: z.array(z.string().min(1)),
+    newPracticeArea: z.string().trim(),
+    licenseNumber: z.string().trim().min(3, "License number is required"),
+    qualifications: z.string().trim().min(2, "Qualifications are required"),
+    experienceYears: z
+      .string()
+      .trim()
+      .refine((value) => /^\d+$/.test(value), {
+        message: "Years of experience must be whole value",
+      })
+      .refine((value) => Number(value) >= 0 && Number(value) <= 60, {
+        message: "Years of experience must be between 0 and 60",
+      }),
+    consultationFee: z
+      .string()
+      .trim()
+      .refine(
+        (value) => value === "" || (/^\d+$/.test(value) && Number(value) > 0),
+        {
+          message: "Consultation fee must be a positive whole number",
+        },
+      ),
+    bio: z
+      .string()
+      .trim()
+      .max(MAX_BIO_LENGTH, `Bio cannot exceed ${MAX_BIO_LENGTH} characters`),
+    resume: getCustomFileSchema<File | null>(
+      `Resume must be a PDF, DOC, DOCX or an image file under ${MAX_FILE_SIZE}MB`,
+    ).refine((value) => value instanceof File, {
+      message: "A resume of cv is required",
     }),
-  consultationFee: z
-    .string()
-    .trim()
-    .refine(
-      (value) => value === "" || (/^\d+$/.test(value) && Number(value) > 0),
-      {
-        message: "Consultation fee must be a positive whole number",
-      },
-    ),
-  bio: z
-    .string()
-    .trim()
-    .max(MAX_BIO_LENGTH, `Bio cannot exceed ${MAX_BIO_LENGTH} characters`),
-  resume: getCustomFileSchema<File | null>(
-    `Resume must be a PDF, DOC, DOCX or an image file under ${MAX_FILE_SIZE}MB`,
-  ).refine((value) => value instanceof File, {
-    message: "A resume of cv is required",
-  }),
-  additionalFiles: z
-    .array(z.custom<File>((value) => value instanceof File))
-    .max(
-      MAX_ADDITIONAL_FILES,
-      `You can attach at most ${MAX_ADDITIONAL_FILES} supporting documents`,
-    )
-    .refine(
-      (files) =>
-        files.every(
-          (file) =>
-            isAcceptedFileSize(file.size) && isAcceptedFileType(file.type),
-        ),
-      {
-        message: `Each file must be a PDF, DOC, DOCX or an image file under ${MAX_FILE_SIZE}MB`,
-      },
-    ),
-});
+    additionalFiles: z
+      .array(z.custom<File>((value) => value instanceof File))
+      .max(
+        MAX_ADDITIONAL_FILES,
+        `You can attach at most ${MAX_ADDITIONAL_FILES} supporting documents`,
+      )
+      .refine(
+        (files) =>
+          files.every(
+            (file) =>
+              isAcceptedFileSize(file.size) && isAcceptedFileType(file.type),
+          ),
+        {
+          message: `Each file must be a PDF, DOC, DOCX or an image file under ${MAX_FILE_SIZE}MB`,
+        },
+      ),
+  })
+  .refine(
+    (value) =>
+      value.specializationIds.length > 0 ||
+      Boolean(value.newPracticeArea?.trim()),
+    {
+      message: "Select a practice area or enter a new one",
+      path: ["specializationIds"],
+    },
+  );

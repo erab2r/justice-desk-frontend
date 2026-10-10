@@ -9,7 +9,7 @@ import { useCurrentUser } from "@/hooks/auth.hook";
 import { useCase } from "@/hooks/case.hook";
 import { getApiErrorMessage } from "@/lib/apiClient";
 import { CaseActivity } from "./case-activity";
-import { CaseBilling, CaseNotes } from "./case-billing";
+import { CaseNotes } from "./case-billing";
 import { CaseDetails } from "./case-details";
 import { CaseDocuments } from "./case-documents";
 import { CaseReports } from "./case-reports";
@@ -19,7 +19,6 @@ type CaseTab =
   | "timeline"
   | "documents"
   | "reports"
-  | "billing"
   | "notes"
   | "video";
 
@@ -62,7 +61,6 @@ export function CaseWorkspacePage() {
     { id: "timeline", label: "Activity" },
     { id: "documents", label: "Documents" },
     { id: "reports", label: "Reports" },
-    { id: "billing", label: "Invoices" },
     ...(lawyerOrAdmin
       ? [{ id: "notes" as const, label: "Private notes" }]
       : role === "CLIENT"
@@ -104,13 +102,6 @@ export function CaseWorkspacePage() {
         caseId={caseId}
         active={tab === "reports"}
         canCreate={role === "LAWYER"}
-      />
-      <CaseBilling
-        caseId={caseId}
-        clientId={caseData.client?.id}
-        lawyerId={caseData.lawyer?.id}
-        role={role}
-        active={tab === "billing"}
       />
       <CaseNotes caseId={caseId} role={role} active={tab === "notes"} />
       {tab === "video" && (
